@@ -397,14 +397,22 @@ class ReverieServer:
           # {"persona": {"Maria Lopez": {"movement": [58, 9]}},
           #  "persona": {"Klaus Mueller": {"movement": [38, 12]}}, 
           #  "meta": {curr_time: <datetime>}}
+
+          curr_move_path = f"{sim_folder}/movement"
+          # If the folder doesn't exist, we create it.
+          if not os.path.exists(curr_move_path):
+            os.makedirs(curr_move_path)
+
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           with open(curr_move_file, "w") as outfile: 
-            outfile.write(json.dumps(movements, indent=2))
+            outfile.write(json.dumps(movements, indent=2))     
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
           self.step += 1
           self.curr_time += datetime.timedelta(seconds=self.sec_per_step)
+          print (f"Step {self.step} completed.")
+          print (f"Current time: {self.curr_time.strftime('%B %d, %Y, %H:%M:%S')}")
 
           int_counter -= 1
           
@@ -592,7 +600,8 @@ class ReverieServer:
 
         print (ret_str)
 
-      except:
+      except Exception as e: # work on python 3.x
+        print('Failed: '+ str(e))
         traceback.print_exc()
         print ("Error.")
         pass
