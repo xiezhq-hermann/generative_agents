@@ -371,6 +371,7 @@ class ReverieServer:
           movements = {"persona": dict(), 
                        "meta": dict()}
           for persona_name, persona in self.personas.items(): 
+            print(f"Persona is acting: {persona_name}")
             # <next_tile> is a x,y coordinate. e.g., (58, 9)
             # <pronunciatio> is an emoji. e.g., "\ud83d\udca4"
             # <description> is a string description of the movement. e.g., 
@@ -405,7 +406,14 @@ class ReverieServer:
 
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           with open(curr_move_file, "w") as outfile: 
-            outfile.write(json.dumps(movements, indent=2))     
+            outfile.write(json.dumps(movements, indent=2))    
+            
+          
+          # directly write to environment file
+          with open(f"{sim_folder}/environment/{self.step + 1}.json", "w") as outfile:
+            environment = {p: {"maze":"the_ville", "x": v["movement"][0], "y":v["movement"][1]} for p, v in movements["persona"].items()}
+            outfile.write(json.dumps(environment, indent=2))
+           
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
