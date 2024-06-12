@@ -27,6 +27,7 @@ import math
 import os
 import shutil
 import traceback
+import redis
 
 from selenium import webdriver
 
@@ -43,6 +44,10 @@ class ReverieServer:
   def __init__(self, 
                fork_sim_code,
                sim_code):
+    port=6379
+    host='localhost'
+    self.db = redis.Redis(host=host, port=port, db=0, decode_responses=True)
+    print("self.db",self.db)
     # FORKING FROM A PRIOR SIMULATION:
     # <fork_sim_code> indicates the simulation we are forking from. 
     # Interestingly, all simulations must be forked from some initial 
@@ -377,9 +382,13 @@ class ReverieServer:
             # <description> is a string description of the movement. e.g., 
             #   writing her next novel (editing her novel) 
             #   @ double studio:double studio:common room:sofa
+
             next_tile, pronunciatio, description = persona.move(
               self.maze, self.personas, self.personas_tile[persona_name], 
-              self.curr_time)
+              self.curr_time,self.db,self.step)
+            next_tile_list = list(next_tile)
+            print("next_tile_list",next_tile_list)
+            self.db.hset(f"location:{persona_name}:{self.step}", mapping = {"location":str(next_tile_list)})
             movements["persona"][persona_name] = {}
             movements["persona"][persona_name]["movement"] = next_tile
             movements["persona"][persona_name]["pronunciatio"] = pronunciatio
