@@ -1,0 +1,14 @@
+{
+    "model_name": "gpt-3.5-turbo",
+    "temperature": 0.3,
+    "maxoutput": 2,
+    "start_time": "2024-6-10 10:30:23",
+    "end_time": "2024-6-10 10:30:25",
+    "persona_name": "John Doe",
+    "step": 1,
+    "function_name": "run_gpt_prompt_event_poignancy",
+    "input":"[]",
+    "input_length": 0,
+    "output": "3",
+    "output_length": 1
+}

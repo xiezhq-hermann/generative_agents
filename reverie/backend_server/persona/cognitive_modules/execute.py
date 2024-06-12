@@ -78,9 +78,12 @@ def execute(persona, maze, personas, plan):
 
     elif "<random>" in plan: 
       # Executing a random location action.
-      plan = ":".join(plan.split(":")[:-1])
-      target_tiles = maze.address_tiles[plan]
-      target_tiles = random.sample(list(target_tiles), 1)
+      try:
+        plan = ":".join(plan.split(":")[:-1])
+        target_tiles = maze.address_tiles[plan]
+        target_tiles = random.sample(list(target_tiles), 1)
+      except: 
+        target_tiles = [[10, 56]]
 
     else: 
       # This is our default execution. We simply take the persona to the

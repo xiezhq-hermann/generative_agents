@@ -12,17 +12,17 @@ from global_methods import *
 from persona.prompt_template.gpt_structure import *
 from persona.prompt_template.run_gpt_prompt import *
 
-def generate_poig_score(persona, event_type, description): 
+def generate_poig_score(persona, event_type, description,db,step): 
   if "is idle" in description: 
     return 1
 
   if event_type == "event": 
-    return run_gpt_prompt_event_poignancy(persona, description)[0]
+    return run_gpt_prompt_event_poignancy(persona, description,db = db,step = step)[0]
   elif event_type == "chat": 
     return run_gpt_prompt_chat_poignancy(persona, 
-                           persona.scratch.act_description)[0]
+                           persona.scratch.act_description,db = db,step = step)[0]
 
-def perceive(persona, maze): 
+def perceive(persona, maze,db,step): 
   """
   Perceives events around the persona and saves it to the memory, both events 
   and spaces. 
@@ -147,7 +147,7 @@ def perceive(persona, maze):
       # Get event poignancy. 
       event_poignancy = generate_poig_score(persona, 
                                             "event", 
-                                            desc_embedding_in)
+                                            desc_embedding_in,db,step)
 
       # If we observe the persona's self chat, we include that in the memory
       # of the persona here. 
@@ -163,7 +163,7 @@ def perceive(persona, maze):
         chat_embedding_pair = (persona.scratch.act_description, 
                                chat_embedding)
         chat_poignancy = generate_poig_score(persona, "chat", 
-                                             persona.scratch.act_description)
+                                             persona.scratch.act_description,db = db, step = step)
         chat_node = persona.a_mem.add_chat(persona.scratch.curr_time, None,
                       curr_event[0], curr_event[1], curr_event[2], 
                       persona.scratch.act_description, keywords, 
