@@ -163,7 +163,7 @@ def ChatGPT_safe_generate_response(prompt,
   for i in range(repeat): 
 
     try: 
-      curr_gpt_response = ChatGPT_request(prompt).strip()
+      curr_gpt_response = ChatLLM_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
       curr_gpt_response = curr_gpt_response[:end_index]
       curr_gpt_response = json.loads(curr_gpt_response)["output"]
@@ -198,7 +198,7 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 
   for i in range(repeat): 
     try: 
-      curr_gpt_response = ChatGPT_request(prompt).strip()
+      curr_gpt_response = ChatLLM_request(prompt).strip()
       if func_validate(curr_gpt_response, prompt=prompt): 
         return func_clean_up(curr_gpt_response, prompt=prompt)
       if verbose: 
@@ -330,6 +330,7 @@ def safe_generate_response(prompt,
 
 
 def get_embedding(text, model="text-embedding-ada-002"):
+  time.sleep(0.1)
   text = text.replace("\n", " ")
   if not text: 
     text = "this is blank"
