@@ -408,9 +408,13 @@ def run_gpt_prompt_task_decomp(persona,
         _cr += [" ".join([j.strip () for j in i.split(" ")][3:])]
       else: 
         _cr += [i]
-    for count, i in enumerate(_cr): 
+    for count, i in enumerate(_cr):
+      
       k = [j.strip() for j in i.split("(duration in minutes:")]
+      print("k value",k) 
       task = k[0]
+      if len(task) == 0:
+        break
       if task[-1] == ".": 
         task = task[:-1]
       duration = int(k[1].split(",")[0].strip())

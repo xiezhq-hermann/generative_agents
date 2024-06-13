@@ -163,7 +163,7 @@ def ChatGPT_safe_generate_response(prompt,
   for i in range(repeat): 
 
     try: 
-      curr_gpt_response = ChatLLM_request(prompt).strip()
+      curr_gpt_response = ChatGPT_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
       curr_gpt_response = curr_gpt_response[:end_index]
       curr_gpt_response = json.loads(curr_gpt_response)["output"]
@@ -198,7 +198,7 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 
   for i in range(repeat): 
     try: 
-      curr_gpt_response = ChatLLM_request(prompt).strip()
+      curr_gpt_response = ChatGPT_request(prompt).strip()
       if func_validate(curr_gpt_response, prompt=prompt): 
         return func_clean_up(curr_gpt_response, prompt=prompt)
       if verbose: 
@@ -217,6 +217,7 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 # ============================================================================
 from sglang import set_default_backend, RuntimeEndpoint
 import sglang as sgl
+
 def LLM_request(prompt,model_parameter):
   set_default_backend(RuntimeEndpoint("http://localhost:30000"))
   @sgl.function
@@ -235,11 +236,10 @@ def LLM_request(prompt,model_parameter):
   def base_func_wrapper(s,prompt = prompt):
     s += prompt
     s += sgl.gen(
-      "response",
-      max_tokens=max_tokens,
+      "response"
     )
   try:
-    if isinstance(model_parameter,dict()):
+    if isinstance(model_parameter,dict):
       return func_wrapper.run(prompt,model_parameter)["response"]
     else:
       return base_func_wrapper(prompt)["response"]
