@@ -140,7 +140,7 @@ class ReverieServer:
     # REVERIE SETTINGS PARAMETERS:  
     # <server_sleep> denotes the amount of time that our while loop rests each
     # cycle; this is to not kill our machine. 
-    self.server_sleep = 0.1
+    self.server_sleep = 0.01
 
     # SIGNALING THE FRONTEND SERVER: 
     # curr_sim_code.json contains the current simulation code, and
@@ -278,7 +278,7 @@ class ReverieServer:
       except:
         pass
 
-      time.sleep(self.server_sleep * 10)
+      # time.sleep(self.server_sleep * 10)
 
 
   def start_server(self, int_counter): 
@@ -434,7 +434,7 @@ class ReverieServer:
           int_counter -= 1
           
       # Sleep so we don't burn our machines. 
-      time.sleep(self.server_sleep)
+      # time.sleep(self.server_sleep)
 
 
   def open_server(self): 
