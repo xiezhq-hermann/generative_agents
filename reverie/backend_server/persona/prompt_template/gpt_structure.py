@@ -20,11 +20,12 @@ def temp_sleep(seconds=0.1):
 def ChatGPT_single_request(prompt):
   temp_sleep()
 
-  completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": prompt}]
-  )
-  return completion["choices"][0]["message"]["content"]
+  # completion = openai.ChatCompletion.create(
+  #   model="gpt-3.5-turbo", 
+  #   messages=[{"role": "user", "content": prompt}]
+  # )
+  response = LLM_request(prompt,None)
+  return response
 
   # to be instrumented later
   # if debug:
@@ -63,7 +64,19 @@ def ChatGPT_single_request(prompt):
 #   except: 
 #     print ("ChatGPT ERROR")
 #     return "ChatGPT ERROR"
-
+def ChatLLM_request(prompt):
+  set_default_backend(RuntimeEndpoint("http://localhost:30000"))
+  @sgl.function
+  def func_wrapper(s,prompt = prompt):
+    s += prompt
+    s += sgl.gen(
+      "response",
+    )
+  try:
+    return func_wrapper.run(prompt)["response"]
+  except: 
+    print ("ChatGPT ERROR")
+    return "ChatGPT ERROR"
 
 def ChatGPT_request(prompt): 
   """
@@ -150,7 +163,7 @@ def ChatGPT_safe_generate_response(prompt,
   for i in range(repeat): 
 
     try: 
-      curr_gpt_response = ChatGPT_request(prompt).strip()
+      curr_gpt_response = ChatLLM_request(prompt).strip()
       end_index = curr_gpt_response.rfind('}') + 1
       curr_gpt_response = curr_gpt_response[:end_index]
       curr_gpt_response = json.loads(curr_gpt_response)["output"]
@@ -185,7 +198,7 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 
   for i in range(repeat): 
     try: 
-      curr_gpt_response = ChatGPT_request(prompt).strip()
+      curr_gpt_response = ChatLLM_request(prompt).strip()
       if func_validate(curr_gpt_response, prompt=prompt): 
         return func_clean_up(curr_gpt_response, prompt=prompt)
       if verbose: 
@@ -202,7 +215,40 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 # ============================================================================
 # ###################[SECTION 2: ORIGINAL GPT-3 STRUCTURE] ###################
 # ============================================================================
+from sglang import set_default_backend, RuntimeEndpoint
+import sglang as sgl
+def LLM_request(prompt,model_parameter):
+  set_default_backend(RuntimeEndpoint("http://localhost:30000"))
+  @sgl.function
+  def func_wrapper(s,prompt = prompt,model_parameter = model_parameter):
+    s += prompt
+    s += sgl.gen(
+      "response",
+      max_tokens=model_parameter["max_tokens"],
+      temperature=model_parameter["temperature"],
+      stop=model_parameter["stop"],
+      top_p=model_parameter["top_p"],
+      frequency_penalty=model_parameter["frequency_penalty"],
+      presence_penalty=model_parameter["presence_penalty"],
+    )
+  @sgl.function
+  def base_func_wrapper(s,prompt = prompt):
+    s += prompt
+    s += sgl.gen(
+      "response",
+      max_tokens=max_tokens,
+    )
+  try:
+    if isinstance(model_parameter,dict()):
+      return func_wrapper.run(prompt,model_parameter)["response"]
+    else:
+      return base_func_wrapper(prompt)["response"]
+  except Exception as e: # work on python 3.x
+    print('Failed: '+ str(e))
+    print ("TOKEN LIMIT EXCEEDED")
+    return "TOKEN LIMIT EXCEEDED"
 
+    
 def GPT_request(prompt, gpt_parameter): 
   """
   Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
@@ -273,7 +319,7 @@ def safe_generate_response(prompt,
     print (prompt)
 
   for i in range(repeat): 
-    curr_gpt_response = GPT_request(prompt, gpt_parameter)
+    curr_gpt_response = LLM_request(prompt, gpt_parameter)
     if func_validate(curr_gpt_response, prompt=prompt): 
       return func_clean_up(curr_gpt_response, prompt=prompt)
     if verbose: 
