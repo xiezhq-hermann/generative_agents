@@ -1,4 +1,5 @@
 reverie/backend_server/utils.py
+reverie/backend_server/persona/prompt_template/utils.py
 environment/frontend_server/temp_storage/*
 environment/frontend_server/storage/*
 frontend_server/settings/local.py
