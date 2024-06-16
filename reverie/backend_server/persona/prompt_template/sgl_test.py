@@ -1,5 +1,6 @@
 from sglang import function, system, user, assistant, gen, set_default_backend, RuntimeEndpoint
 import sglang as sgl
+from gpt_structure import llm_safe_generation
 # @staticmethod
 # def llm_call(prompt, max_tokens):
 #     set_default_backend(RuntimeEndpoint("http://localhost:30000"))
@@ -35,12 +36,7 @@ def LLM_request(prompt,model_parameter):
     s += prompt
     s += sgl.gen(
       "response",
-      max_tokens=model_parameter["max_tokens"],
-      temperature=model_parameter["temperature"],
-      stop=model_parameter["stop"],
-      top_p=model_parameter["top_p"],
-      frequency_penalty=model_parameter["frequency_penalty"],
-      presence_penalty=model_parameter["presence_penalty"],
+      **model_parameter
     )
   @sgl.function
   def base_func_wrapper(s,prompt = prompt):
@@ -57,5 +53,32 @@ def LLM_request(prompt,model_parameter):
     print('Failed: '+ str(e))
     print ("TOKEN LIMIT EXCEEDED")
     return "TOKEN LIMIT EXCEEDED"
-result = LLM_request("I want you to write a schedule for me, starting from 8:00 am to 5 p.m.",{"max_tokens":10000,"temperature":0.5,"stop":"\n","top_p":0.9,"frequency_penalty":0.0,"presence_penalty":0.0})
-print(result)
+def __chat_func_clean_up(gpt_response, prompt=""): ############
+  cr = gpt_response.strip()
+  if len(cr) > 3:
+    cr = cr[:3]
+  return cr
+
+def __chat_func_validate(gpt_response, prompt=""): ############
+  try: 
+    __func_clean_up(gpt_response, prompt="")
+    if len(gpt_response) == 0: 
+      return False
+  except: return False
+  return True 
+def __func_clean_up(gpt_response, prompt=""):
+  cr = gpt_response.strip()
+  if len(cr) > 3:
+    cr = cr[:3]
+  return cr
+prompt = "Task: We want to understand the state of an object that is being used by someone. \n\nLet's think step by step. \nWe want to know about closet's state. \nStep 1. Yuriko Yamamoto is at/using the sleeping.\nStep 2. Describe the closet's state."
+example_output = "{output\:closet is idle}"
+# special_instruction = "only return the emoji without anyother things"
+# special_instruction = special_instruction = "The output should ONLY contain the phrase that should go in <fill in>."
+special_instruction = "output the answer in json format like {output: <result>}, give the answer to the problem, do not generate code or any unrelated results."
+fail_safe = "closet is idle"
+
+result = llm_safe_generation(prompt,example_output,special_instruction,3,fail_safe,
+                             __chat_func_validate,__chat_func_clean_up,
+                             {"max_tokens":50,"temperature":0.3})
+print("result",result)

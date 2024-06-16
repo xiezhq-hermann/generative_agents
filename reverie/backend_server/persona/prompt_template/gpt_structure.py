@@ -225,12 +225,13 @@ def LLM_request(prompt,model_parameter):
     s += prompt
     s += sgl.gen(
       "response",
-      max_tokens=model_parameter["max_tokens"],
-      temperature=model_parameter["temperature"],
-      stop=model_parameter["stop"],
-      top_p=model_parameter["top_p"],
-      frequency_penalty=model_parameter["frequency_penalty"],
-      presence_penalty=model_parameter["presence_penalty"],
+      # max_tokens=model_parameter["max_tokens"],
+      # temperature=model_parameter["temperature"],
+      # stop=model_parameter["stop"],
+      # top_p=model_parameter["top_p"],
+      # frequency_penalty=model_parameter["frequency_penalty"],
+      # presence_penalty=model_parameter["presence_penalty"],
+      **model_parameter
     )
   @sgl.function
   def base_func_wrapper(s,prompt = prompt):
@@ -247,6 +248,25 @@ def LLM_request(prompt,model_parameter):
     print('Failed: '+ str(e))
     print ("TOKEN LIMIT EXCEEDED")
     return "TOKEN LIMIT EXCEEDED"
+def llm_safe_generation(prompt,example_output,special_instruction,repeat,fail_safe,func_validate,func_clean_up,model_parameters):
+  # prompt = '"""\n' + prompt + '\n"""\n'
+  prompt += f"{special_instruction}\n"
+  prompt +=f"Example output:{example_output}"
+  for i in range(repeat):
+    try:
+      curr_gpt_response = LLM_request(prompt,model_parameters)
+      # print("prompt",prompt)
+      print("currgpt response",curr_gpt_response)
+      end_index = curr_gpt_response.rfind('}') + 1
+      start_index = curr_gpt_response.rfind('{')
+      curr_gpt_response = curr_gpt_response[start_index:end_index]
+      curr_gpt_response = json.loads(curr_gpt_response)["output"]
+      if func_validate(curr_gpt_response,prompt = prompt):
+        return func_clean_up(curr_gpt_response, prompt=prompt)
+    except:
+      pass
+  return fail_safe
+  
 
     
 def GPT_request(prompt, gpt_parameter): 

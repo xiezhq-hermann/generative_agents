@@ -46,7 +46,7 @@ class ReverieServer:
                sim_code):
     port=6379
     host='localhost'
-    self.db = redis.Redis(host=host, port=port, db=1, decode_responses=True)
+    self.db = redis.Redis(host=host, port=port, db=0, decode_responses=True)
     print("self.db",self.db)
     # FORKING FROM A PRIOR SIMULATION:
     # <fork_sim_code> indicates the simulation we are forking from. 

@@ -476,15 +476,17 @@ def run_gpt_prompt_task_decomp(persona,
   start = time.time()
   prompt = generate_prompt(prompt_input, prompt_template)
   end = time.time()
-  fail_safe = get_fail_safe()
-  put_in_db(db, persona.scratch.name, step,
-            "run_gpt_prompt_task_decomp", start, end,
-            "gpt-3.5-turbo-instruct", 1000, str(prompt_input), str(prompt))
+  
   print ("?????")
   print (prompt)
+  fail_safe = get_fail_safe()
   output = safe_generate_response(prompt, gpt_param, 5, get_fail_safe(),
                                    __func_validate, __func_clean_up)
 
+  
+  put_in_db(db, persona.scratch.name, step,
+            "run_gpt_prompt_task_decomp", start, end,
+            "gpt-3.5-turbo-instruct", 1000, str(prompt), str(prompt))
   # TODO THERE WAS A BUG HERE... 
   # This is for preventing overflows...
   """
@@ -664,7 +666,7 @@ def run_gpt_prompt_action_sector(action_description,
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_action_sector", start, end,
-            "gpt-3.5-turbo-instruct", 15, str(prompt_input), str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   y = f"{maze.access_tile(persona.scratch.curr_tile)['world']}"
   x = [i.strip() for i in persona.s_mem.get_str_accessible_sectors(y).split(",")]
   if output not in x: 
@@ -768,7 +770,7 @@ def run_gpt_prompt_action_arena(action_description,
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_action_arena", start, end,
-            "gpt-3.5-turbo-instruct", 15, str(prompt_input), str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   print (output)
   # y = f"{act_world}:{act_sector}"
   # x = [i.strip() for i in persona.s_mem.get_str_accessible_sector_arenas(y).split(",")]
@@ -834,7 +836,7 @@ def run_gpt_prompt_action_game_object(action_description,
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_action_game_object", start, end,
-            "gpt-3.5-turbo-instruct", 15, str(prompt_input), str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   x = [i.strip() for i in persona.s_mem.get_str_accessible_arena_game_objects(temp_address).split(",")]
   if output not in x: 
     output = random.choice(x)
@@ -898,15 +900,19 @@ def run_gpt_prompt_pronunciatio(action_description, persona, verbose=False,db = 
   prompt_input = create_prompt_input(action_description)  ########
   prompt = generate_prompt(prompt_input, prompt_template)
   example_output = "🛁🧖‍♀️" ########
-  special_instruction = "The value for the output must ONLY contain the emojis." ########
+  # special_instruction = "The value for the output must ONLY contain the emojis." ########
+  special_instruction = "only return the emoji without anyother things"
   fail_safe = get_fail_safe()
   start = time.time()
-  output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
-                                          __chat_func_validate, __chat_func_clean_up, True)
+  # output = ChatGPT_safe_generate_response(prompt, example_output, special_instruction, 3, fail_safe,
+  #                                         __chat_func_validate, __chat_func_clean_up, True)
+  output = llm_safe_generation(prompt,example_output,special_instruction,3,fail_safe, 
+                               __chat_func_validate,__chat_func_clean_up,
+                             {"max_tokens":20,"temperature":0.5})
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_pronunciatio", start, end,
-            "gpt-3.5-turbo-instruct", 15, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   if output != False:
     if debug or verbose: 
       print_run_prompts(prompt_template, persona, gpt_param, 
@@ -1020,7 +1026,7 @@ def run_gpt_prompt_event_triple(action_description, persona, verbose=False, db =
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_event_triple", start, end,
-            "gpt-3.5-turbo-instruct", 30, str(prompt_input), str(output))
+            "gpt-3.5-turbo-instruct", 30, str(prompt), str(output))
   output = (persona.name, output[0], output[1])
 
   if debug or verbose: 
@@ -1095,7 +1101,7 @@ def run_gpt_prompt_act_obj_desc(act_game_object, act_desp, persona, verbose=Fals
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_act_obj_desc", start, end,
-            "gpt-3.5-turbo-instruct", 15, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   if output != False: 
     if debug or verbose: 
       print_run_prompts(prompt_template, persona, gpt_param, 
@@ -1166,7 +1172,7 @@ def run_gpt_prompt_act_obj_event_triple(act_game_object, act_obj_desc, persona, 
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_act_obj_event_triple", start, end,
-            "gpt-3.5-turbo-instruct", 30, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 30, prompt, str(output))
   output = (act_game_object, output[0], output[1])
 
   if debug or verbose: 
@@ -1318,7 +1324,7 @@ def run_gpt_prompt_new_decomp_schedule(persona,
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_new_decomp_schedule", start, end,
-            "gpt-3.5-turbo-instruct", 1000, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 1000, str(prompt), str(output))
   
   # print ("* * * * output")
   # print (output)
@@ -1432,7 +1438,7 @@ def run_gpt_prompt_decide_to_talk(persona, target_persona, retrieved,test_input=
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_decide_to_talk", start, end,
-            "gpt-3.5-turbo-instruct", 20, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 20, str(prompt), str(output))
 
   print_run_prompts(prompt_template, persona, gpt_param, 
                     prompt_input, prompt, output)
@@ -1536,7 +1542,7 @@ def run_gpt_prompt_decide_to_react(persona, target_persona, retrieved,test_input
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_decide_to_react", start, end,
-            "gpt-3.5-turbo-instruct", 20, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 20, str(prompt), str(output))
 
   print_run_prompts(prompt_template, persona, gpt_param, 
                     prompt_input, prompt, output)
@@ -1748,7 +1754,7 @@ def run_gpt_prompt_summarize_conversation(persona, conversation, test_input=None
   end = time.time()
   put_in_db(db, persona.scratch.name, step,
             "run_gpt_prompt_summarize_conversation", start, end,
-            "gpt-3.5-turbo-instruct", 15, prompt_input, str(output))
+            "gpt-3.5-turbo-instruct", 15, str(prompt), str(output))
   if output != False: 
     if debug or verbose: 
       print_run_prompts(prompt_template, persona, gpt_param, 
@@ -2011,7 +2017,7 @@ def run_gpt_prompt_event_poignancy(persona, event_description, test_input=None, 
   if db is not None:
     put_in_db(db, persona.scratch.name, step, "run_gpt_prompt_event_poignancy",
               start_time=start, end_time=end, model_name="gpt-3.5-turbo-instruct",
-              max_token= 15, input = prompt, output = output
+              max_token= 15, input = str(prompt), output = output
               )
   if output != False: 
     if debug or verbose: 
@@ -2168,7 +2174,7 @@ def run_gpt_prompt_chat_poignancy(persona, event_description, test_input=None, v
   if db is not None:
     put_in_db(db, persona.scratch.name, step, "run_gpt_prompt_chat_poignancy",
               start_time=start, end_time=end, model_name="gpt-3.5-turbo-instruct",
-              max_token= 15, input = prompt, output = output
+              max_token= 15, input = str(prompt), output = output
               )
   if output != False: 
     if debug or verbose: 
@@ -2467,7 +2473,7 @@ def run_gpt_prompt_agent_chat_summarize_relationship(persona, target_persona, st
   end = time.time()
   put_in_db(db, persona.scratch.name, step, "run_gpt_prompt_agent_chat_summarize_relationship",
               start_time=start, end_time=end, model_name="gpt-3.5-turbo-instruct",
-              max_token= 15, input = prompt, output = str(output)
+              max_token= 15, input = str(prompt), output = str(output)
               )
   if output != False: 
     if debug or verbose: 
